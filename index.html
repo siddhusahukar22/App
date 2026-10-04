@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ELITE Communication OS</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#070a12;color:#eef2ff;font-family:Arial,sans-serif}
+header{padding:24px;background:#101629;border-bottom:1px solid #27304a}
+h1{margin:0;color:#7dd3fc}h2{margin-top:0}.wrap{max-width:900px;margin:auto;padding:20px}
+.card{background:#111827;border:1px solid #26324d;border-radius:18px;padding:20px;margin:15px 0}
+button{background:#38bdf8;border:0;border-radius:10px;padding:12px 18px;font-weight:bold;cursor:pointer;margin:5px}
+button:hover{opacity:.85}.stat{display:inline-block;width:23%;min-width:120px;margin:1%;padding:15px;background:#172036;border-radius:14px}
+.big{font-size:28px;font-weight:bold;color:#7dd3fc}.muted{color:#94a3b8}
+textarea,input{width:100%;padding:13px;border-radius:10px;border:1px solid #334155;background:#080d18;color:white;margin:8px 0}
+nav button{background:#1e293b;color:white}.hidden{display:none}.score{font-size:40px;color:#7dd3fc;font-weight:bold}
+.badge{display:inline-block;background:#1e293b;padding:8px 12px;border-radius:20px;margin:4px}
+</style>
+</head>
+<body>
+
+<header>
+<div class="wrap">
+<h1>⚡ ELITE Communication OS</h1>
+<p class="muted">Train your voice. Think faster. Speak with presence.</p>
+</div>
+</header>
+
+<div class="wrap">
+
+<nav>
+<button onclick="show('dash')">Dashboard</button>
+<button onclick="show('rapid')">Rapid Fire</button>
+<button onclick="show('debate')">Boss Battle</button>
+<button onclick="show('mirror')">Mirror Studio</button>
+<button onclick="show('recall')">Recall Lab</button>
+</nav>
+
+<section id="dash">
+<div class="card">
+<h2>Player Profile</h2>
+<div class="stat">XP<div class="big" id="xp">0</div></div>
+<div class="stat">Level<div class="big" id="level">1</div></div>
+<div class="stat">Streak<div class="big" id="streak">0</div></div>
+<div class="stat">Mastery<div class="big" id="mastery">0%</div></div>
+</div>
+
+<div class="card">
+<h2>🎯 Daily Mission</h2>
+<p>Complete one Rapid Fire challenge and one Recall challenge.</p>
+<button onclick="show('rapid')">Start Mission</button>
+</div>
+
+<div class="card">
+<h2>🏆 Tiers</h2>
+<p><b>1–10:</b> Foundation & Mechanics</p>
+<p><b>11–25:</b> Speed & Dynamic Agility</p>
+<p><b>26–50:</b> Executive Presence & High Stakes</p>
+</div>
+</section>
+
+<section id="rapid" class="hidden">
+<div class="card">
+<h2>⚡ Rapid Fire Arena</h2>
+<p id="topic">Press START. You'll get 3 seconds to prepare.</p>
+<button onclick="startRapid()">START</button>
+<textarea id="answer" rows="7" placeholder="Speak your answer aloud, then type/transcribe it here..."></textarea>
+<button onclick="analyze()">Analyze Response</button>
+<div id="feedback"></div>
+</div>
+</section>
+
+<section id="debate" class="hidden">
+<div class="card">
+<h2>👑 Debate Boss Battle</h2>
+<p>Select your challenge.</p>
+<button onclick="boss('Salary Negotiation')">Salary Negotiation</button>
+<button onclick="boss('Media Interview')">Media Interview</button>
+<button onclick="boss('Crisis Management')">Crisis Management</button>
+<button onclick="boss('Difficult Client')">Difficult Client</button>
+<div id="bossout"></div>
+</div>
+</section>
+
+<section id="mirror" class="hidden">
+<div class="card">
+<h2>🎥 Mirror Studio</h2>
+<p class="muted">Camera stays on your device in this prototype.</p>
+<video id="cam" autoplay playsinline style="width:100%;border-radius:15px"></video>
+<button onclick="camera()">Enable Camera</button>
+<hr>
+<label>Eye contact: <input id="eye" type="range" min="0" max="100" value="70"></label>
+<label>Posture: <input id="post" type="range" min="0" max="100" value="70"></label>
+<label>Facial engagement: <input id="face" type="range" min="0" max="100" value="70"></label>
+<label>Hand gestures: <input id="hands" type="range" min="0" max="100" value="70"></label>
+<button onclick="presence()">Calculate Presence</button>
+<div id="presence"></div>
+</div>
+</section>
+
+<section id="recall" class="hidden">
+<div class="card">
+<h2>🧠 Recall Lab</h2>
+<p id="question"></p>
+<div id="options"></div>
+<div id="result"></div>
+</div>
+</section>
+
+</div>
+
+<script>
+let data=JSON.parse(localStorage.getItem("elite"))||{xp:0,streak:0,attempts:0};
+const topics=[
+"Tell me about yourself in 30 seconds.",
+"Why should someone trust you?",
+"Describe a difficult situation you handled.",
+"Convince me to change my opinion.",
+"What does success mean to you?",
+"Explain something complicated simply.",
+"Give your opinion on social media.",
+"Why should we hire you?",
+"Tell me about a failure and what you learned.",
+"What makes a great leader?"
+];
+
+function save(){localStorage.setItem("elite",JSON.stringify(data));update()}
+function update(){
+document.getElementById("xp").textContent=data.xp;
+document.getElementById("level").textContent=Math.min(50,Math.floor(data.xp/100)+1);
+document.getElementById("streak").textContent=data.streak;
+document.getElementById("mastery").textContent=Math.min(100,Math.floor(data.xp/50))+"%";
+}
+function show(id){
+document.querySelectorAll("section").forEach(x=>x.classList.add("hidden"));
+document.getElementById(id).classList.remove("hidden");
+if(id==="recall")recall();
+}
+function startRapid(){
+let t=topics[Math.floor(Math.random()*topics.length)];
+document.getElementById("topic").textContent="Get ready... 3... 2... 1... GO!  "+t;
+}
+function analyze(){
+let x=document.getElementById("answer").value.trim();
+if(!x){alert("Give your response first.");return}
+let words=x.split(/\s+/).length;
+let fillers=(x.match(/\b(um|uh|like|basically|actually|you know)\b/gi)||[]).length;
+let wpm=words*2;
+let structure=/because|however|therefore|first|second|finally|example|result/i.test(x);
+let score=Math.max(0,Math.min(100,70+words*.2-fillers*7+(structure?10:0)));
+data.xp+=25;data.attempts++;data.streak=Math.max(1,data.streak);save();
+document.getElementById("feedback").innerHTML=
+`<div class="card"><div class="score">${Math.round(score)}/100</div>
+<p>Words: ${words} · Approx WPM: ${wpm} · Fillers: ${fillers}</p>
+<p><b>Try:</b> Replace fillers with a short pause. Use a simple structure: <b>Point → Reason → Example → Conclusion.</b></p>
+<p><b>Executive alternative:</b> Make your opening sentence direct, remove unnecessary words, and finish with a clear takeaway.</p></div>`;
+}
+function boss(type){
+let q={
+"Salary Negotiation":"The company says your requested salary is too high. Convince the hiring manager.",
+"Media Interview":"A reporter challenges your credibility. Respond without becoming defensive.",
+"Crisis Management":"A serious mistake happened. Explain what you will do next.",
+"Difficult Client":"The client is angry and says your team failed completely."
+}[type];
+document.getElementById("bossout").innerHTML=`<div class="card"><h3>${type}</h3><p>${q}</p><textarea id="bossans" rows="5" placeholder="Give your response..."></textarea><button onclick="bossScore()">Submit</button></div>`;
+}
+function bossScore(){
+let a=document.getElementById("bossans").value;
+let score=50+(a.length>80?15:0)+(/understand|agree|value|solution|next|because/i.test(a)?20:0);
+data.xp+=40;data.attempts++;save();
+document.getElementById("bossout").innerHTML+=`<p class="score">${Math.min(score,100)}/100</p><p>Boss feedback: Acknowledge → Frame the issue → Give evidence/value → Propose the next action.</p>`;
+}
+async function camera(){
+try{
+let s=await navigator.mediaDevices.getUserMedia({video:true});
+document.getElementById("cam").srcObject=s;
+}catch(e){alert("Camera permission was denied or unavailable.");}
+}
+function presence(){
+let a=["eye","post","face","hands"].map(id=>+document.getElementById(id).value);
+let s=Math.round(a.reduce((x,y)=>x+y,0)/4);
+document.getElementById("presence").innerHTML=`<div class="score">${s}/100</div><p>${s<70?"Focus on one micro-adjustment at a time.":"Strong presence. Keep movements intentional and relaxed."}</p>`;
+data.xp+=15;save();
+}
+const qs=[
+["What does concise mean?",["Long","Clear and brief","Aggressive","Confusing"],1],
+["What does persuasive mean?",["Able to convince","Very quiet","Unclear","Slow"],0],
+["What does articulate mean?",["Unable to speak","Expressing ideas clearly","Angry","Silent"],1],
+["What does credible mean?",["Believable","Funny","Fast","Expensive"],0]
+];
+function recall(){
+let q=qs[Math.floor(Math.random()*qs.length)];
+document.getElementById("question").textContent=q[0];
+document.getElementById("options").innerHTML=q[1].map((o,i)=>`<button onclick="answer(${i},${q[2]})">${o}</button>`).join("");
+document.getElementById("result").textContent="";
+}
+function answer(i,c){
+if(i===c){data.xp+=20;document.getElementById("result").textContent="✅ Correct! +20 XP";}
+else document.getElementById("result").textContent="❌ Not quite. Try again.";
+save();
+}
+update();
+</script>
+</body>
+</html>
